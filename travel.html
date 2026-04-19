@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>엄마 아빠 여행 포털</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-color: #F8F9FA;
+    --card-bg: #FFFFFF;
+    --border-color: #E0E0E0;
+    --text-main: #333333;
+    --text-sub: #999999;
+    --accent: #0047FF;
+    --red: #d32f2f;
+    --orange: #ef6c00;
+    --green: #2e7d32;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg-color); color: var(--text-main); line-height: 1.6; }
+  .page { display: none; padding: 40px 20px; max-width: 800px; margin: 0 auto; min-height: 100vh; }
+  .page.active { display: block; animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .header { text-align: center; margin-bottom: 50px; padding-top: 20px; }
+  .header .top-label { font-size: 12px; letter-spacing: 4px; color: var(--text-sub); margin-bottom: 10px; font-weight: 300; }
+  .header h1 { font-size: 28px; font-weight: 700; color: #000; margin-bottom: 15px; }
+  .header .divider { width: 40px; height: 1.5px; background: #000; margin: 0 auto; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .full-btn { grid-template-columns: 1fr; }
+  .card {
+    background: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: 12px;
+    padding: 30px 15px; text-align: left; text-decoration: none; color: inherit;
+    transition: all 0.2s ease; cursor: pointer; display: flex; flex-direction: column;
+    justify-content: center; min-height: 150px; -webkit-tap-highlight-color: transparent;
+  }
+  .card:active { background-color: #f0f0f0; transform: scale(0.98); }
+  .card:hover { border-color: #999; }
+  .card-icon { font-size: 24px; margin-bottom: 12px; display: block; }
+  .card-name { font-size: 17px; font-weight: 700; margin-bottom: 4px; color: #333; }
+  .card-sub { font-size: 11px; color: var(--text-sub); letter-spacing: 1px; font-weight: 400; }
+  .back-btn { display: inline-flex; align-items: center; margin-bottom: 25px; color: #555; text-decoration: none; font-size: 14px; font-weight: 500; cursor: pointer; }
+  .detail-title { font-size: 22px; margin-bottom: 25px; font-weight: 700; text-align: center; }
+  .sight-list { display: flex; flex-direction: column; gap: 12px; }
+  .sight-card { background: #fff; border: 1px solid #E0E0E0; border-radius: 12px; padding: 20px; }
+  .sight-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .sight-name { font-size: 17px; font-weight: 700; color: #333; }
+  .sight-price { font-size: 14px; color: #666; }
+  .sight-desc { font-size: 13px; color: #777; line-height: 1.5; margin-bottom: 12px; }
+  .sight-footer { display: flex; align-items: center; gap: 10px; }
+  .label { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+  .mandatory { background-color: #ffebee; color: var(--red); border: 1px solid var(--red); }
+  .recommended { background-color: #fff3e0; color: var(--orange); border: 1px solid var(--orange); }
+  .free { background-color: #e8f5e9; color: var(--green); border: 1px solid var(--green); }
+  .reserve-link { color: var(--accent); text-decoration: none; font-size: 13px; font-weight: 600; }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<div id="home-page" class="page active">
+  <div class="header">
+    <p class="top-label">FAMILY TRAVEL</p>
+    <h1>엄마아빠 여행 포털</h1>
+    <div class="divider"></div>
+  </div>
+  <div class="grid">
+    <a href="https://www.skyscanner.co.kr" target="_blank" class="card"><span class="card-icon">✈️</span><span class="card-name">항공</span><span class="card-sub">FLIGHTS</span></a>
+    <div onclick="showPage('stay-page')" class="card"><span class="card-icon">🏨</span><span class="card-name">숙소</span><span class="card-sub">STAY</span></div>
+    <div onclick="showPage('transport-page')" class="card"><span class="card-icon">🚇</span><span class="card-name">교통</span><span class="card-sub">TRANSPORT</span></div>
+    <div onclick="showPage('sights-regions-page')" class="card"><span class="card-icon">🗺️</span><span class="card-name">볼 것</span><span class="card-sub">SIGHTS</span></div>
+    <div onclick="showPage('food-page')" class="card"><span class="card-icon">🍽️</span><span class="card-name">먹을 것</span><span class="card-sub">FOOD</span></div>
+    <a href="https://papago.naver.com" target="_blank" class="card"><span class="card-icon">🗨️</span><span class="card-name">번역</span><span class="card-sub">TRANSLATE</span></a>
+  </div>
+</div>
+
+<div id="stay-page" class="page">
+  <div onclick="showPage('home-page')" class="back-btn">← 처음으로 돌아가기</div>
+  <h2 class="detail-title">숙소를 선택해 주세요</h2>
+  <div class="grid full-btn">
+    <a href="https://kr.hotels.com/" target="_blank" class="card"><span class="card-name">🏢 일반 호텔</span><span class="card-sub">Hotels.com에서 예약하기</span></a>
+    <a href="https://www.airbnb.co.kr" target="_blank" class="card"><span class="card-name">🏠 가정집에서 묵고 싶어요</span><span class="card-sub">에어비앤비에서 찾기</span></a>
+    <a href="https://www.theminda.com/main/index.php" target="_blank" class="card"><span class="card-name">🇰🇷 한인민박에서 묵고싶어요</span><span class="card-sub">민다(Minda)에서 한국인 숙소 찾기</span></a>
+  </div>
+</div>
+
+<div id="transport-page" class="page">
+  <div onclick="showPage('home-page')" class="back-btn">← 처음으로 돌아가기</div>
+  <h2 class="detail-title">이동 수단을 선택해 주세요</h2>
+  <div class="grid full-btn">
+    <div onclick="openGoogleMapsMain()" class="card"><span class="card-name">🚶‍♂️ 도보 · 대중교통</span><span class="card-sub">구글 맵스 길찾기</span></div>
+    <a href="https://m.uber.com" target="_blank" class="card"><span class="card-name">🚕 택시</span><span class="card-sub">우버(Uber) 호출하기</span></a>
+    <a href="https://www.omio.co.kr/?languageAccepted=&_gl=1*hyfkph*_gcl_au*NTQ4NjM1MDExLjE3NzUwMjEzNTU.*FPAU*NTQ4NjM1MDExLjE3NzUwMjEzNTU.*_ga*MjU2MTM2ODUzLjE3NzUwMjEzNTY.*_ga_WZNCX0KL4B*czE3NzY1NjE0ODMkbzIkZzEkdDE3NzY1NjI3MzYkajU3JGwwJGgw*_fplc*aFZ3dEtob3hjUTclMkZjaW1TaEJnZWZzbkRHd3lZUlNXSVZ2b1R4NUVXJTJCZHcwd0VNbTF5a2poREp3d1RNWWMzU0ZVWm1icHJ2WUtSczFodUZxdXdxVURta2lMY2ZXUFExVDVHdTBtTlBJZ3oxJTJCQ2pKVFQzd3ZMZGt1JTJCUkNnN3clM0QlM0Q." target="_blank" class="card"><span class="card-name">🚄 기차</span><span class="card-sub">Omio 기차 통합 예약</span></a>
+  </div>
+</div>
+
+<div id="food-page" class="page">
+  <div onclick="showPage('home-page')" class="back-btn">← 처음으로 돌아가기</div>
+  <h2 class="detail-title">무엇을 드시고 싶으세요?</h2>
+  <div class="grid full-btn">
+    <div onclick="findNearbyFood()" class="card" style="border-color: var(--orange);">
+      <span class="card-name">📍 내 주변 맛집 찾기</span>
+      <span class="card-sub">현재 위치 주변 식당 지도로 보기</span>
+    </div>
+    <a href="https://www.tripadvisor.co.kr/Restaurants" target="_blank" class="card"><span class="card-name">🍴 트립어드바이저 맛집</span><span class="card-sub">전체 순위 확인하기</span></a>
+  </div>
+</div>
+
+<div id="sights-regions-page" class="page">
+  <div onclick="showPage('home-page')" class="back-btn">← 처음으로 돌아가기</div>
+  <h2 class="detail-title">어느 도시를 여행하시나요?</h2>
+  <div class="grid full-btn">
+    <div onclick="showPage('sights-rome')" class="card"><span class="card-name">🏛️ 로마 / 바티칸</span></div>
+    <div onclick="showPage('sights-florence')" class="card"><span class="card-name">🎨 피렌체</span></div>
+    <div onclick="showPage('sights-venice')" class="card"><span class="card-name">🛶 베네치아</span></div>
+    <div onclick="showPage('sights-milan')" class="card"><span class="card-name">🕍 밀라노</span></div>
+  </div>
+</div>
+
+<div id="sights-rome" class="page">
+  <div onclick="showPage('sights-regions-page')" class="back-btn">← 지역 선택으로 돌아가기</div>
+  <h2 class="detail-title">로마 주요 명소</h2>
+  <div class="sight-list">
+    <div class="sight-card">
+      <div class="sight-header"><span class="sight-name">콜로세움</span><span class="sight-price">18€</span></div>
+      <p class="sight-desc">고대 로마의 상징적인 원형 경기장 유적입니다.</p>
+      <div class="sight-footer"><span class="label recommended">사전예약 권장</span><a href="https://www.coopculture.it/en/" target="_blank" class="reserve-link">예약하기 ↗</a></div>
+    </div>
+    <div class="sight-card">
+      <div class="sight-header"><span class="sight-name">바티칸 박물관</span><span class="sight-price">20€~</span></div>
+      <p class="sight-desc">시스티나 성당을 포함한 세계 최대 규모의 박물관입니다.</p>
+      <div class="sight-footer"><span class="label mandatory">예약 필수</span><a href="https://tickets.museivaticani.va/" target="_blank" class="reserve-link">예약하기 ↗</a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showPage(pageId) {
+    const target = document.getElementById(pageId);
+    if (target) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      target.classList.add('active');
+      window.scrollTo(0, 0);
+    }
+  }
+
+  // 수정된 부분: ${lat} 앞에 $ 표시를 정확히 추가하고 구글 맵 정식 주소를 사용합니다.
+  function openGoogleMapsMain() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        const lat = pos.coords.latitude, lng = pos.coords.longitude;
+        const url = `https://www.google.com/maps/@${lat},${lng},15z`;
+        window.open(url, '_blank');
+      }, function() {
+        window.open("https://www.google.com/maps/", '_blank');
+      });
+    } else {
+      window.open("https://www.google.com/maps/", '_blank');
+    }
+  }
+
+  function findNearbyFood() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        const lat = pos.coords.latitude, lng = pos.coords.longitude;
+        const url = `https://www.google.com/maps/search/restaurants/@${lat},${lng},15z`;
+        window.open(url, '_blank');
+      }, function() {
+        alert("위치 권한을 허용해 주셔야 주변 맛집을 찾을 수 있어요! 😅");
+      });
+    } else {
+      alert("이 기기에서는 위치 기능을 지원하지 않아요.");
+    }
+  }
+</script>
+
+</body>
+</html>
