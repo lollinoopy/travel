@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>엄마 아빠 여행 포털</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FDF6ED; --warm: #F0E2CC; --terracotta: #C4714A; --deep: #2C1A0E; --gold: #D4A853; --muted: #8C7B6E; --text: #3D2B1F;
+    --w1: #0047FF; --w2: #ef6c00; --w3: #2e7d32; --w4: #6A5EA8; --w5: #d32f2f; --w6: #D4A853;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; }
+  
+  .page { display: none; } 
+  .page.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .hero { background: linear-gradient(135deg, #2C1A0E 0%, #5B3A22 50%, #C4714A 100%); padding: 40px 24px; text-align: center; position: relative; }
+  .hero h1 { font-family: 'Noto Serif KR', serif; font-size: 28px; color: #FDF6ED; margin-bottom: 8px; }
+  .hero p { color: rgba(253,246,237,0.6); font-size: 13px; }
+  .container { max-width: 800px; margin: 0 auto; padding: 20px 20px 60px; }
+  
+  .grid { display: grid; gap: 10px; grid-template-columns: repeat(3, 1fr); }
+  .btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 10px; border-radius: 14px; border: 1.5px solid rgba(44,26,14,0.07); background: white; text-decoration: none; color: var(--text); transition: all 0.2s; cursor: pointer; }
+  .btn-itin { grid-column: span 3; flex-direction: row; gap: 15px; background: var(--deep); color: white; border: none; margin-bottom: 5px; }
+  .btn-name { font-weight: 600; font-size: 14px; text-align: center; }
+  .btn-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* 일정 리스트 스타일 */
+  #editable-itinerary-container { position: relative; padding-left: 55px; }
+  #editable-itinerary-container::before { content: ''; position: absolute; left: 22px; top: 0; bottom: 0; width: 2px; background: var(--warm); }
+  .editable-day-item { position: relative; margin-bottom: 25px; cursor: grab; }
+  .timeline-dot-wrapper { position: absolute; left: -50px; top: 0; display: flex; flex-direction: column; align-items: center; width: 45px; }
+  .timeline-dot { width: 18px; height: 18px; background: white; border: 4px solid #ccc; border-radius: 50%; box-shadow: 0 0 0 3px white; }
+  .dot-w1 { border-color: var(--w1); } .dot-w2 { border-color: var(--w2); } .dot-w3 { border-color: var(--w3); } 
+  .dot-w4 { border-color: var(--w4); } .dot-w5 { border-color: var(--w5); } .dot-w6 { border-color: var(--w6); }
+  .day-label { font-size: 11px; font-weight: 700; color: var(--deep); margin-top: 5px; }
+  
+  .day-content { background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .city-in { width: 100%; border: none; border-bottom: 2px solid var(--warm); padding: 4px 0; font-size: 15px; font-weight: 700; color: var(--deep); background: transparent; }
+  textarea { width: 100%; border: 1px solid #f5f5f5; border-radius: 6px; padding: 6px 8px; font-size: 13px; resize: none; background: #fafafa; height: 42px; font-family: inherit; }
+  
+  .day-ops { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+  .op-btn { border: none; padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+  .btn-add-below { background: var(--warm); color: var(--deep); font-weight: 700; }
+  .btn-del { background: #fff1f0; color: #f5222d; }
+
+  /* 표 스타일 */
+  .table-container { overflow-x: auto; background: white; border-radius: 12px; border: 1px solid var(--border-color); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 500px; }
+  th { background: var(--deep); color: white; padding: 12px; text-align: left; }
+  td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: top; }
+  
+  .view-toggle-btn { background: var(--terracotta); color: white; border: none; padding: 10px 20px; border-radius: 25px; font-weight: 700; margin-bottom: 20px; cursor: pointer; width: 100%; }
+  .back-btn { display: inline-flex; align-items: center; gap: 5px; margin-bottom: 15px; color: var(--terracotta); cursor: pointer; font-size: 14px; font-weight: 600; }
+
+  @media (max-width: 480px) { .grid { grid-template-columns: repeat(2, 1fr); } .btn-itin { grid-column: span 2; } }
+</style>
+</head>
+<body>
+
+<div id="home-page" class="page active">
+  <div class="hero"><h1>엄마 아빠 <span>90일</span> 여행</h1><p>사랑하는 부모님을 위한 맞춤 포털</p></div>
+  <div class="container">
+    <div class="grid">
+      <div onclick="showPage('itinerary-page')" class="btn btn-itin"><div>📅</div><div><div class="btn-name">나만의 일정 (Day 1~90)</div><div class="btn-sub" style="color:white">일정을 짜고 표로 확인하세요</div></div></div>
+      <a href="https://www.skyscanner.co.kr" target="_blank" class="btn">🛫<div class="btn-name">항공권</div></a>
+      <div onclick="showPage('stay-page')" class="btn">🏨<div class="btn-name">숙소</div></div>
+      <div onclick="showPage('transport-page')" class="btn">🚂<div class="btn-name">교통</div></div>
+      <div onclick="showPage('booking-page')" class="btn">🎟️<div class="btn-name">예약</div></div>
+      <div onclick="showPage('food-page')" class="btn">🍕<div class="btn-name">먹을 것</div></div>
+      <a href="https://papago.naver.com" target="_blank" class="btn">🦜<div class="btn-name">번역</div></a>
+    </div>
+  </div>
+</div>
+
+<div id="itinerary-page" class="page">
+  <div class="hero"><h1>상세 <span>일정표</span></h1><p>직접 내용을 입력하고 수정하세요</p></div>
+  <div class="container">
+    <div onclick="showPage('home-page')" class="back-btn">← 처음으로</div>
+    <button class="view-toggle-btn" onclick="showPage('itinerary-table-page')">📋 표로 한눈에 보기</button>
+    <div id="editable-itinerary-container"></div>
+  </div>
+</div>
+
+<div id="itinerary-table-page" class="page">
+  <div class="hero"><h1>일정 <span>전체보기</span></h1><p>엑셀처럼 깔끔하게 정리된 표입니다</p></div>
+  <div class="container" style="max-width: 1000px;">
+    <div onclick="showPage('itinerary-page')" class="back-btn">← 편집 화면으로</div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr><th style="width:60px">Day</th><th style="width:100px">도시</th><th>볼 것</th><th>참고</th></tr>
+        </thead>
+        <tbody id="itinerary-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="stay-page" class="page">
+  <div class="hero"><h1>안락한 <span>숙소</span></h1><p>어디에서 머물고 싶으신가요?</p></div>
+  <div class="container">
+    <div onclick="showPage('home-page')" class="back-btn">← 처음으로</div>
+    <div class="grid" style="grid-template-columns: 1fr;">
+      <a href="https://kr.hotels.com/" target="_blank" class="btn">
+        <div class="btn-name">🏢 일반 호텔 (Hotels.com)</div>
+        <div class="btn-sub">전 세계 수많은 호텔을 가장 편하게 예약해요</div>
+      </a>
+      <a href="https://www.airbnb.co.kr" target="_blank" class="btn">
+        <div class="btn-name">🏠 에어비앤비 (Airbnb)</div>
+        <div class="btn-sub">현지 사람들의 집에서 살아보는 경험을 해요</div>
+      </a>
+      <a href="https://www.theminda.com/" target="_blank" class="btn">
+        <div class="btn-name">🇰🇷 한인민박 (민다)</div>
+        <div class="btn-sub">한국인 주인이 운영하는 편안한 숙소를 찾아요</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div id="transport-page" class="page">
+  <div class="hero"><h1>편리한 <span>교통</span></h1><p>길 찾기와 이동 수단을 확인하세요</p></div>
+  <div class="container">
+    <div onclick="showPage('home-page')" class="back-btn">← 처음으로</div>
+    <div class="grid" style="grid-template-columns: 1fr;">
+      <a href="https://www.omio.co.kr/" target="_blank" class="btn">
+        <div class="btn-name">🚄 기차 예약 (Omio)</div>
+        <div class="btn-sub">유럽 기차 노선을 한국어로 한눈에 보고 예약해요</div>
+      </a>
+      <div onclick="window.open('https://maps.google.com')" class="btn">
+        <div class="logo">📍</div>
+        <div class="btn-name">구글 맵스 (길찾기)</div>
+        <div class="btn-sub">현재 위치에서 가고 싶은 곳까지 길을 알려줘요</div>
+      </div>
+      <a href="https://m.uber.com" target="_blank" class="btn">
+        <div class="btn-name">🚕 택시 호출 (우버)</div>
+        <div class="btn-sub">길에서 택시 잡을 필요 없이 앱으로 편하게 불러요</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div id="booking-page" class="page">
+  <div class="hero"><h1>간편한 <span>예약</span></h1><p>투어와 입장권을 미리 준비하세요</p></div>
+  <div class="container">
+    <div onclick="showPage('home-page')" class="back-btn">← 처음으로</div>
+    <div class="grid" style="grid-template-columns: 1fr;">
+      <a href="https://www.myrealtrip.com/" target="_blank" class="btn">
+        <div class="btn-name">🌍 마이리얼트립</div>
+        <div class="btn-sub">한국인 가이드 투어와 티켓을 예약해요</div>
+      </a>
+      <a href="https://www.klook.com/ko/?spm=Home.TopNavigation.BackHome&clickId=cbff14be33" target="_blank" class="btn">
+        <div class="btn-name">🎟️ 클룩 (Klook)</div>
+        <div class="btn-sub">유명 관광지 입장권을 할인된 가격에 사요</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div id="food-page" class="page">
+  <div class="hero"><h1>현지 <span>맛집</span></h1><p>평점 높은 식당을 찾아보세요</p></div>
+  <div class="container">
+    <div onclick="showPage('home-page')" class="back-btn">← 처음으로</div>
+    <div class="grid" style="grid-template-columns: 1fr;">
+      <div onclick="alert('현지에서 내 주변 맛집을 검색합니다!')" class="btn">🍽️ 내 주변 맛집 찾기</div>
+      <a href="https://www.tripadvisor.co.kr/Restaurants" target="_blank" class="btn">⭐ 트립어드바이저 맛집</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showPage(pageId) {
+    const target = document.getElementById(pageId);
+    if (!target) return;
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    target.classList.add('active');
+    window.scrollTo(0, 0);
+    if(pageId === 'itinerary-table-page') renderTable();
+  }
+
+  let itineraryData = [];
+
+  function initData() {
+    const saved = localStorage.getItem('itinerary_final_detailed_v9');
+    if (saved) {
+      itineraryData = JSON.parse(saved);
+    } else {
+      // 90일 기본 핵심 일정 생성
+      for (let i = 1; i <= 90; i++) {
+        let city = i <= 30 ? "로마" : i <= 39 ? "나폴리" : i <= 59 ? "피렌체" : i <= 89 ? "바르셀로나" : "한국";
+        let place = (i === 1) ? "로마 도착" : "";
+        itineraryData.push({ city, places: place, notes: "" });
+      }
+    }
+    renderItinerary();
+  }
+
+  function renderItinerary() {
+    const container = document.getElementById('editable-itinerary-container');
+    container.innerHTML = '';
+    itineraryData.forEach((data, index) => {
+      const weekNum = Math.floor(index / 7) + 1;
+      const colorClass = 'dot-w' + (weekNum % 6 || 6);
+      const item = document.createElement('div');
+      item.className = 'editable-day-item';
+      item.draggable = true;
+      item.innerHTML = `
+        <div class="timeline-dot-wrapper"><div class="timeline-dot ${colorClass}"></div><div class="day-label">Day ${index+1}</div></div>
+        <div class="day-content">
+          <input type="text" class="city-in" placeholder="도시" value="${data.city}">
+          <textarea class="p-in" placeholder="갈곳">${data.places}</textarea>
+          <textarea class="n-in" placeholder="메모">${data.notes}</textarea>
+          <div class="day-ops"><button class="op-btn btn-add-below" onclick="addBelow(${index})">+ 추가</button><button class="op-btn btn-del" onclick="deleteAt(${index})">🗑️ 삭제</button></div>
+        </div>
+      `;
+      // 드래그 & 저장 이벤트 바인딩
+      item.addEventListener('dragstart', e => { e.dataTransfer.setData('text', index); item.style.opacity = '0.5'; });
+      item.addEventListener('dragover', e => e.preventDefault());
+      item.addEventListener('drop', e => {
+        const from = parseInt(e.dataTransfer.getData('text'));
+        const to = index;
+        const moved = itineraryData.splice(from, 1)[0];
+        itineraryData.splice(to, 0, moved);
+        save(); renderItinerary();
+      });
+      item.addEventListener('dragend', () => item.style.opacity = '1');
+      item.querySelector('.city-in').oninput = e => { itineraryData[index].city = e.target.value; save(); };
+      item.querySelector('.p-in').oninput = e => { itineraryData[index].places = e.target.value; save(); };
+      item.querySelector('.n-in').oninput = e => { itineraryData[index].notes = e.target.value; save(); };
+      container.appendChild(item);
+    });
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('itinerary-table-body');
+    tbody.innerHTML = '';
+    itineraryData.forEach((data, index) => {
+      tbody.innerHTML += `<tr><td>${index+1}</td><td>${data.city}</td><td>${data.places}</td><td>${data.notes}</td></tr>`;
+    });
+  }
+
+  function save() { localStorage.setItem('itinerary_final_detailed_v9', JSON.stringify(itineraryData)); }
+  function addBelow(index) { itineraryData.splice(index+1, 0, { city: itineraryData[index].city, places: "", notes: "" }); save(); renderItinerary(); }
+  function deleteAt(index) { if(confirm('삭제할까요?')) { itineraryData.splice(index, 1); save(); renderItinerary(); } }
+
+  window.onload = initData;
+</script>
+</body>
+</html>
