@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>90일간의 유럽일주</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FDF6ED; --warm: #F0E2CC; --terracotta: #C4714A; --deep: #2C1A0E; --muted: #8C7B6E; --text: #3D2B1F;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; line-height: 1.6; }
+  
+  .page { display: none; } 
+  .page.active { display: block; animation: fadeIn 0.2s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .hero { background: linear-gradient(135deg, #2C1A0E 0%, #5B3A22 50%, #C4714A 100%); padding: 40px 20px; text-align: center; }
+  .hero h1 { font-family: 'Noto Serif KR', serif; font-size: 28px; color: #FDF6ED; margin-bottom: 0; }
+  .container { max-width: 800px; margin: 0 auto; padding: 20px 20px 60px; }
+  
+  /* 메인 메뉴 */
+  .grid { display: grid; gap: 10px; grid-template-columns: repeat(3, 1fr); }
+  .btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 10px; border-radius: 14px; border: 1.5px solid rgba(44,26,14,0.07); background: white; text-decoration: none; color: var(--text); cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+  .btn-itin { grid-column: span 3; flex-direction: row; gap: 15px; background: var(--deep); color: white; border: none; }
+  .btn-itin .btn-name { color: white; font-size: 16px; margin-top: 0; }
+  .btn-name { font-weight: 600; font-size: 13px; text-align: center; margin-top: 8px; color: var(--text); }
+
+  /* 표 및 탭 UI */
+  .res-badge { display: inline-flex; align-items: center; justify-content: center; background: #f5222d; color: white; font-size: 10px; font-weight: 700; width: 16px; height: 16px; border-radius: 50%; margin-left: 6px; vertical-align: middle; }
+  .table-container { overflow-x: auto; background: white; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 600px; }
+  th { background: var(--deep); color: white; padding: 12px; text-align: left; }
+  td { padding: 14px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+  
+  .city-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; scrollbar-width: none; }
+  .city-tabs::-webkit-scrollbar { display: none; }
+  .tab-btn { flex: 0 0 auto; padding: 8px 16px; border-radius: 20px; border: 1px solid var(--terracotta); background: white; color: var(--terracotta); font-size: 13px; font-weight: 700; cursor: pointer; }
+  .tab-btn.active { background: var(--terracotta); color: white; }
+  .filter-row { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+  .cat-select { padding: 6px 12px; border-radius: 15px; border: 1.5px solid var(--terracotta); font-size: 12px; font-weight: 600; color: var(--terracotta); outline: none; }
+
+  /* 명소명 클릭 디자인 (버튼 삭제 후 깔끔한 밑줄만 유지) */
+  .clickable-name { color: var(--deep); font-size: 14.5px; font-weight: 700; text-decoration: underline; cursor: pointer; }
+
+  /* 상세 페이지 */
+  .detail-card { background: white; border-radius: 16px; padding: 30px 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+  .detail-title { font-family: 'Noto Serif KR', serif; font-size: 24px; font-weight: 700; color: var(--deep); text-align: center; margin-bottom: 10px; }
+  .detail-meta { display: flex; justify-content: center; gap: 15px; font-size: 13px; color: var(--terracotta); font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid var(--warm); padding-bottom: 20px; }
+  .section-title { font-size: 16px; font-weight: 700; color: var(--terracotta); margin: 20px 0 10px; display: flex; align-items: center; gap: 6px; }
+  .section-title::before { content: ''; width: 3px; height: 15px; background: var(--terracotta); }
+  .detail-desc { font-size: 14.5px; color: #333; white-space: pre-wrap; }
+
+  /* 일정 편집기 */
+  #editable-itinerary-container { position: relative; padding-left: 45px; }
+  #editable-itinerary-container::before { content: ''; position: absolute; left: 18px; top: 0; bottom: 0; width: 2px; background: var(--warm); }
+  .editable-day-item { position: relative; margin-bottom: 20px; cursor: grab; }
+  .timeline-dot-wrapper { position: absolute; left: -45px; top: 0; display: flex; flex-direction: column; align-items: center; width: 40px; }
+  .timeline-dot { width: 14px; height: 14px; background: var(--terracotta); border-radius: 50%; border: 3px solid white; box-shadow: 0 0 0 2px var(--warm); }
+  .day-label { font-size: 11px; font-weight: 700; color: var(--deep); margin-top: 4px; }
+  .day-content { background: white; border: 1px solid var(--warm); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .city-in { border: none; border-bottom: 1px solid var(--warm); padding: 4px 0; font-size: 15px; font-weight: 700; color: var(--deep); outline: none; }
+  .p-in { border: 1px solid #eee; border-radius: 6px; padding: 8px; font-size: 13px; background: #fafafa; resize: vertical; min-height: 50px; }
+  .day-ops { display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+  .op-btn { border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; }
+  .btn-add { background: var(--warm); color: var(--deep); }
+  .btn-del { background: #fff1f0; color: #f5222d; }
+  .btn-rec { background: #e6f7ff; color: #0050b3; border: 1px solid #91d5ff; margin-right: auto; }
+  .view-toggle-btn { background: var(--terracotta); color: white; border: none; padding: 12px; border-radius: 20px; font-weight: 700; margin-bottom: 20px; cursor: pointer; width: 100%; font-size: 14px; }
+
+  .back-btn { display: inline-flex; align-items: center; gap: 5px; margin-bottom: 15px; color: var(--terracotta); cursor: pointer; font-size: 14px; font-weight: 700; }
+  @media (max-width: 480px) { .grid { grid-template-columns: repeat(2, 1fr); } .btn-itin { grid-column: span 2; } }
+</style>
+</head>
+<body>
+
+<div id="home-page" class="page active">
+  <div class="hero"><h1><span>90일간의</span> 유럽일주</h1></div>
+  <div class="container">
+    <div class="grid">
+      <div onclick="showPage('itinerary-page')" class="btn btn-itin">📅 <div class="btn-name">나만의 일정 (Day 1~90)</div></div>
+      <a href="https://www.skyscanner.co.kr" target="_blank" class="btn">🛫<div class="btn-name">항공권</div></a>
+      <div onclick="showPage('stay-page')" class="btn">🏨<div class="btn-name">숙소</div></div>
+      <div onclick="showPage('transport-page')" class="btn">🚂<div class="btn-name">교통</div></div>
+      <div onclick="showPage('booking-page')" class="btn">🎟️<div class="btn-name">예약</div></div>
+      <div onclick="showPage('info-page')" class="btn">🔍<div class="btn-name">여행 정보</div></div>
+      <div onclick="showPage('food-page')" class="btn">🍕<div class="btn-name">먹을 것</div></div>
+      <a href="https://papago.naver.com" target="_blank" class="btn">🦜<div class="btn-name">번역</div></a>
+    </div>
+  </div>
+</div>
+
+<div id="stay-page" class="page"><div class="hero"><h1>안락한 <span>숙소</span></h1></div><div class="container"><div onclick="goBackDirect()" class="back-btn">← 처음으로</div><div class="grid" style="grid-template-columns: 1fr;"><a href="https://kr.hotels.com/" target="_blank" class="btn">🏢 호텔 예약 (Hotels.com)</a><a href="https://www.airbnb.co.kr" target="_blank" class="btn">🏠 에어비앤비 (Airbnb)</a><a href="https://www.theminda.com/" target="_blank" class="btn">🇰🇷 한인민박 예약 (민다)</a></div></div></div>
+<div id="transport-page" class="page"><div class="hero"><h1>편리한 <span>교통</span></h1></div><div class="container"><div onclick="goBackDirect()" class="back-btn">← 처음으로</div><div class="grid" style="grid-template-columns: 1fr;"><a href="https://www.omio.co.kr/" target="_blank" class="btn">🚄 기차 통합 예약 (Omio)</a><div onclick="window.open('https://www.google.com/maps')" class="btn">📍 구글 맵스 (길찾기)</div><a href="https://m.uber.com" target="_blank" class="btn">🚕 택시 호출 (우버)</a></div></div></div>
+<div id="booking-page" class="page"><div class="hero"><h1>간편한 <span>예약</span></h1></div><div class="container"><div onclick="goBackDirect()" class="back-btn">← 처음으로</div><div class="grid" style="grid-template-columns: 1fr;"><a href="https://www.myrealtrip.com/" target="_blank" class="btn">🌍 마이리얼트립 투어</a><a href="https://www.klook.com/ko/" target="_blank" class="btn">🎟️ 클룩 입장권 예약</a></div></div></div>
+<div id="food-page" class="page"><div class="hero"><h1>현지 <span>맛집</span></h1></div><div class="container"><div onclick="goBackDirect()" class="back-btn">← 처음으로</div><div class="grid" style="grid-template-columns: 1fr;"><div onclick="findNearbyFood()" class="btn">🍽️ 내 주변 맛집 찾기</div><a href="https://www.tripadvisor.co.kr/Restaurants" target="_blank" class="btn">⭐ 트립어드바이저</a></div></div></div>
+
+<div id="info-page" class="page">
+  <div class="hero"><h1>도시별 <span>관광 정보</span></h1><p>명소 이름을 누르면 상세 인문학 가이드를 볼 수 있습니다</p></div>
+  <div class="container" style="max-width: 1000px;">
+    <div onclick="goBackDirect()" class="back-btn">← 처음으로</div>
+    <div class="city-tabs" id="city-tabs">
+      <button class="tab-btn active" onclick="updateCity('로마')">로마</button>
+      <button class="tab-btn" onclick="updateCity('나폴리')">나폴리</button>
+      <button class="tab-btn" onclick="updateCity('피렌체')">피렌체</button>
+      <button class="tab-btn" onclick="updateCity('돌로미티')">돌로미티</button>
+      <button class="tab-btn" onclick="updateCity('베네치아')">베네치아</button>
+      <button class="tab-btn" onclick="updateCity('세비야')">세비야</button>
+      <button class="tab-btn" onclick="updateCity('그라나다')">그라나다</button>
+      <button class="tab-btn" onclick="updateCity('바르셀로나')">바르셀로나</button>
+    </div>
+    <div class="filter-row"><select id="cat-filter" class="cat-select" onchange="renderFilteredInfo()"><option value="전체">전체 보기</option></select></div>
+    <div class="table-container">
+      <table>
+        <thead><tr><th style="width: 45%;">명소명</th><th style="width: 20%;">비용</th><th style="width: 35%;">팁 & 주의사항</th></tr></thead>
+        <tbody id="info-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="detail-page" class="page">
+  <div class="hero"><h1><span>인문학</span> 가이드</h1></div>
+  <div class="container">
+    <div onclick="goBackDirect()" class="back-btn">← 목록으로 돌아가기</div>
+    <div class="detail-card">
+      <div class="detail-title" id="detail-title"></div>
+      <div class="detail-meta"><span id="detail-cost"></span> <span id="detail-cat"></span></div>
+      <div class="section-title">역사적 배경과 이야기</div><div id="detail-history" class="detail-desc"></div>
+      <div class="section-title">꼭 봐야 할 감상 포인트</div><div id="detail-must" class="detail-desc"></div>
+      <div class="section-title">여행 전문가의 팁</div><div id="detail-tip" class="detail-desc"></div>
+    </div>
+  </div>
+</div>
+
+<div id="itinerary-page" class="page">
+  <div class="hero"><h1>상세 <span>일정표</span></h1><p>도시명을 쓰고 추천받기를 눌러보세요 (동선 최적화)</p></div>
+  <div class="container">
+    <div onclick="goBackDirect()" class="back-btn">← 처음으로</div>
+    <button class="view-toggle-btn" onclick="showPage('itinerary-table-page')">📋 일정 표로 한눈에 보기</button>
+    <div id="editable-itinerary-container"></div>
+  </div>
+</div>
+<div id="itinerary-table-page" class="page">
+  <div class="hero"><h1>일정 <span>요약보기</span></h1></div>
+  <div class="container" style="max-width: 1000px;"><div onclick="goBackDirect()" class="back-btn">← 편집 화면으로</div>
+    <div class="table-container"><table><thead><tr><th style="width:60px">Day</th><th style="width:120px">도시</th><th>관광 명소 및 메모</th></tr></thead><tbody id="itinerary-table-body"></tbody></table></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+
+<script>
+  let currentCity = '로마';
+  let itineraryData = [];
+
+  function showPage(pageId, pushState = true) {
+    const target = document.getElementById(pageId);
+    if (!target) return;
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    target.classList.add('active');
+    window.scrollTo(0, 0);
+    if (pushState) history.pushState({ pageId: pageId }, "", "#" + pageId);
+    if(pageId === 'info-page') updateCity(currentCity);
+    if(pageId === 'itinerary-table-page') renderTable();
+  }
+  window.onpopstate = (e) => showPage(e.state ? e.state.pageId : 'home-page', false);
+  function goBackDirect() { history.back(); }
+
+  function updateCity(cityName) {
+    currentCity = cityName;
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.innerText === cityName));
+    
+    // data.js 파일이 잘 로드되었는지 확인
+    if (typeof travelInfoData === 'undefined') {
+      alert("data.js 파일이 아직 연결되지 않았습니다. data.js 파일이 index.html과 같은 폴더에 있는지 확인해주세요.");
+      return;
+    }
+    
+    const data = travelInfoData[cityName] || [];
+    const categories = ['전체', ...new Set(data.map(item => item.cat))];
+    const filter = document.getElementById('cat-filter');
+    filter.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+    renderFilteredInfo();
+  }
+
+  function renderFilteredInfo() {
+    const cat = document.getElementById('cat-filter').value;
+    const tbody = document.getElementById('info-table-body');
+    tbody.innerHTML = '';
+    const data = (travelInfoData[currentCity] || []).filter(item => cat === '전체' || item.cat === cat);
+    data.forEach(item => {
+      const badge = item.res === 'Y' ? '<span class="res-badge">예</span>' : '';
+      // 불필요한 버튼을 삭제하고 깔끔한 텍스트 링크만 유지했습니다.
+      tbody.innerHTML += `
+        <tr>
+          <td><span class="clickable-name" onclick="showDetail('${item.name}')">${item.name}</span>${badge}</td>
+          <td style="font-weight:600; color:var(--deep);">${item.cost}</td>
+          <td style="color:#555; line-height:1.4;">${item.tip}</td>
+        </tr>
+      `;
+    });
+  }
+
+  function showDetail(name) {
+    const item = travelInfoData[currentCity]?.find(i => i.name === name);
+    if (!item) return;
+    document.getElementById('detail-title').innerText = item.name;
+    document.getElementById('detail-cost').innerText = '💰 방문 비용: ' + item.cost;
+    document.getElementById('detail-cat').innerText = '🏛️ 장소 테마: ' + item.cat;
+    document.getElementById('detail-history').innerText = item.hist || '';
+    document.getElementById('detail-must').innerText = item.must || '';
+    
+    // 💡 "MD의 실전 팁:" 문구를 삭제하고 데이터 내용만 깔끔하게 출력되도록 수정했습니다.
+    document.getElementById('detail-tip').innerText = item.tip || '';
+    
+    showPage('detail-page');
+  }
+
+  function findNearbyFood() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        window.open(`https://www.google.com/maps/search/top+rated+restaurants/@$$${pos.coords.latitude},${pos.coords.longitude},15z`, '_blank');
+      });
+    }
+  }
+
+  const optRoutes = {
+    '로마': [['바티칸 박물관 + 시스티나', '성 베드로 대성당', '산탄젤로 성'], ['콜로세움 + 포로 로마노', '판테온', '트레비 분수'], ['스페인 계단', '나보나 광장', '캄포 데 피오리'], ['테스타accio 시장', '트라스테베레 지구', '자니콜로 언덕']],
+    '바르셀로나': [['카사 바트요', '카사 밀라', '사그라다 파밀리아'], ['고딕 지구', '바르셀로나 대성당', '피카소 미술관'], ['카탈루냐 국립 미술관 MNAC', '몬주익 언덕', '바르셀로네타 해변']],
+    '피렌체': [['두오모 쿠폴라', '오페라 델 두오모 박물관', '아카데미아 미술관'], ['우피치 미술관', '베키오 궁전', '베키오 다리'], ['피티 궁전', '산타 크로체 성당', '미켈란젤로 광장']],
+    '베네치아': [['산 마르코 대성당', '두칼레 궁전', '리알토 다리'], ['부라노 섬', '무라노 섬', '토르첼로 섬']],
+    '세비야': [['알카사르 궁전', '세비야 대성당 + 히랄다 탑', '바리오 산타 크루스 (유대인 지구)'], ['스페인 광장 (Plaza de España)', '마리아 루이사 공원', '메트로폴 파라솔 (Setas de Sevilla)']],
+    '그라나다': [['알람브라 - 나사리에스 궁전', '헤네랄리페 정원', '알카사바 요새'], ['알바이신 지구', '성 니콜라스 전망대', '삭로몬테 지구']],
+    '나폴리': [['국립 고고학 박물관', '나폴리 지하 도시 (나폴리 소테라네아)', '카포디몬테 미술관'], ['산 마르티노 수도원 (박물관)', '폼페이 유적', '소렌토']],
+    '돌로미티': [['세체다 전망대', '알페 디 시우시', '외치 박물관 (남티롤 고고학 박물관)'], ['트레 치메 디 라바레도', '카레차 호수', '브라이에스 호수']]
+  };
+
+  function recommendPlaces(index) {
+    const cityInput = itineraryData[index].city.trim();
+    if (!cityInput) { alert('도시 칸에 도시 이름(예: 로마, 파리)을 먼저 적어주세요!'); return; }
+    const foundCity = Object.keys(optRoutes).find(c => cityInput.includes(c));
+    if (foundCity) {
+      const r = optRoutes[foundCity]; const picked = r[Math.floor(Math.random() * r.length)].join(' → ');
+      const prev = itineraryData[index].places;
+      itineraryData[index].places = (prev ? prev + '\n' : '') + '[최적 동선 추천] ' + picked;
+      saveItin(); renderItinerary();
+    } else { alert('해당 도시는 아직 최적화 데이터가 없습니다. 다른 도시를 입력해 보세요.'); }
+  }
+
+  function initItin() {
+    const saved = localStorage.getItem('itin_v90_real_final');
+    if (saved) { itineraryData = JSON.parse(saved); } 
+    else { for (let i = 1; i <= 90; i++) { itineraryData.push({ id: Date.now() + i, city: "", places: "" }); } }
+    renderItinerary();
+  }
+
+  function renderItinerary() {
+    const container = document.getElementById('editable-itinerary-container');
+    if (!container) return; container.innerHTML = '';
+    itineraryData.forEach((data, index) => {
+      const item = document.createElement('div');
+      item.className = 'editable-day-item'; item.draggable = true;
+      const weekNum = Math.floor(index / 7) + 1;
+      item.innerHTML = `
+        <div class="timeline-dot-wrapper"><div class="timeline-dot dot-w${(weekNum%3)||3}"></div><div class="day-label">Day ${index+1}</div></div>
+        <div class="day-content">
+          <input type="text" class="city-in" value="${data.city}" placeholder="방문 도시명 입력">
+          <textarea class="p-in" placeholder="장소 및 메모">${data.places}</textarea>
+          <div class="day-ops">
+            <button class="op-btn btn-rec" onclick="recommendPlaces(${index})">✨ 3곳 코스 추천받기</button>
+            <button class="op-btn btn-add" onclick="addBelow(${index})">+ 칸 추가</button>
+            <button class="op-btn btn-del" onclick="deleteAt(${index})">🗑️ 삭제</button>
+          </div>
+        </div>
+      `;
+      item.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', index); item.style.opacity = '0.4'; });
+      item.addEventListener('dragover', e => e.preventDefault());
+      item.addEventListener('drop', e => {
+        const from = e.dataTransfer.getData('text/plain');
+        const moved = itineraryData.splice(from, 1)[0];
+        itineraryData.splice(index, 0, moved); saveItin(); renderItinerary();
+      });
+      item.addEventListener('dragend', () => item.style.opacity = '1');
+      item.querySelector('.city-in').oninput = e => { itineraryData[index].city = e.target.value; saveItin(); };
+      item.querySelector('.p-in').oninput = e => { itineraryData[index].places = e.target.value; saveItin(); };
+      container.appendChild(item);
+    });
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('itinerary-table-body');
+    tbody.innerHTML = itineraryData.map((data, index) => 
+      (data.city || data.places) ? `<tr><td>Day ${index+1}</td><td><b style="color:var(--deep);">${data.city}</b></td><td style="white-space:pre-wrap; line-height:1.5;">${data.places}</td></tr>` : ''
+    ).join('');
+  }
+
+  function addBelow(index) { itineraryData.splice(index + 1, 0, { id: Date.now(), city: "", places: "" }); saveItin(); renderItinerary(); }
+  function deleteAt(index) { if(confirm('삭제할까요?')) { itineraryData.splice(index, 1); saveItin(); renderItinerary(); } }
+  function saveItin() { localStorage.setItem('itin_v90_real_final', JSON.stringify(itineraryData)); }
+
+  window.onload = () => { 
+    initItin(); 
+    // data.js 파일 로드 시간을 고려해 0.1초 딜레이 후 로마 데이터 렌더링
+    setTimeout(() => {
+      updateCity('로마'); 
+      history.replaceState({ pageId: 'home-page' }, "", "#home-page");
+    }, 100);
+  };
+</script>
+</body>
+</html>
